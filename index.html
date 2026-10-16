@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BrawlCalculator 1.1 beta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg1:#2a62f5; --bg2:#5f8fff; --panel:#ffffff; --ink:#1b1245; --muted:#5e5a85;
+  --outline:#0b0720; --field:#f1f0fb; --yellow:#ffd21f; --yellow-ink:#1b1245;
+  --purple:#7a47e6; --good:#0f8a5f; --warn:#c2410c; --hero:#ffffff;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg1:#140c2e; --bg2:#2a1a5c; --panel:#241a4a; --ink:#f3efff; --muted:#aaa3d6;
+    --field:#170f36; --good:#4ee0a6; --warn:#ffb36b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg1:#140c2e; --bg2:#2a1a5c; --panel:#241a4a; --ink:#f3efff; --muted:#aaa3d6;
+  --field:#170f36; --good:#4ee0a6; --warn:#ffb36b;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);min-height:100%;background:var(--bg1)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{min-height:100vh;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--ink);font:700 16px/1.45 "Nunito",system-ui,sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:16px 14px 28px;position:relative;z-index:1}
+.stroke{text-shadow:-2px -2px 0 var(--outline),2px -2px 0 var(--outline),-2px 2px 0 var(--outline),2px 2px 0 var(--outline),0 3px 0 var(--outline)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.topright{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.logo{font:400 clamp(1.5rem,5vw,2rem)/1 "Lilita One",system-ui,sans-serif;color:var(--yellow);letter-spacing:.01em}
+.logo span{color:#fff}
+.ver{font:400 .95rem "Lilita One",sans-serif;background:var(--yellow);color:var(--yellow-ink);border:3px solid var(--outline);border-radius:999px;padding:2px 10px;box-shadow:0 3px 0 var(--outline)}
+h1{font:400 clamp(2rem,7vw,3.4rem)/1.02 "Lilita One",system-ui,sans-serif;color:var(--hero);margin:10px 0 8px}
+h1 em{font-style:normal;color:var(--yellow)}
+h2{font:400 1.35rem/1.2 "Lilita One",sans-serif;margin:0 0 10px;letter-spacing:.01em}
+.chip{display:inline-block;font:400 1rem "Lilita One",sans-serif;background:var(--purple);color:#fff;border:3px solid var(--outline);border-radius:999px;padding:2px 12px;box-shadow:0 3px 0 var(--outline);margin-left:6px;vertical-align:middle}
+.chip.p2{background:#e5483d;color:#fff}
+.chip.p3{background:#ffd21f;color:#fff;text-shadow:-1px -1px 0 var(--outline),1px -1px 0 var(--outline),-1px 1px 0 var(--outline),1px 1px 0 var(--outline),0 2px 0 var(--outline)}
+.lead{color:#fff;opacity:.92;margin:0 0 18px;max-width:60ch}
+.modes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+@media(min-width:620px){.modes{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:900px){.modes{grid-template-columns:repeat(4,1fr)}}
+.mode{font:400 1.05rem/1.1 "Lilita One",sans-serif;color:#fff;background:var(--purple);border:3px solid var(--outline);border-radius:14px;padding:12px 6px 10px;box-shadow:0 5px 0 var(--outline);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;text-shadow:0 2px 0 var(--outline);transition:transform .08s,box-shadow .08s}
+.mode .ic{font-size:1.7rem;line-height:1}
+.mode[aria-pressed="true"]{background:var(--yellow);color:var(--yellow-ink);text-shadow:none;transform:translateY(2px);box-shadow:0 3px 0 var(--outline),0 0 18px rgba(255,210,31,.6)}
+.mode:active{transform:translateY(4px);box-shadow:0 1px 0 var(--outline)}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.tab{font:400 1rem "Lilita One",sans-serif;color:#fff;background:rgba(11,7,32,.45);border:3px solid var(--outline);border-radius:12px;padding:7px 14px;cursor:pointer}
+.tab[aria-selected="true"]{background:rgba(11,7,32,.78);color:var(--yellow);box-shadow:0 0 14px rgba(255,210,31,.5),inset 0 0 10px rgba(255,210,31,.18)}
+.mode:focus-visible,.tab:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:4px solid #fff;outline-offset:2px}
+.grid{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:800px){.grid{grid-template-columns:370px 1fr}}
+.panel{background:var(--panel);border:3px solid var(--outline);border-radius:18px;padding:18px;box-shadow:0 6px 0 var(--outline)}
+label{display:block;font-weight:800;font-size:.92rem;margin:12px 0 4px}
+label small{color:var(--muted);font-weight:700}
+input[type=number],textarea,.sel{width:100%;background:var(--field);color:var(--ink);border:3px solid var(--outline);border-radius:10px;padding:9px 10px;font:inherit}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.82rem;font-weight:600;resize:vertical;white-space:pre;overflow:auto}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+details{margin-top:14px;border-top:3px dashed var(--muted);padding-top:10px}
+summary{cursor:pointer;font:400 1.05rem "Lilita One",sans-serif}
+.go{margin-top:18px;width:100%;font:400 1.5rem "Lilita One",sans-serif;letter-spacing:.02em;color:var(--yellow-ink);background:var(--yellow);border:3px solid var(--outline);border-radius:14px;padding:12px;box-shadow:0 6px 0 var(--outline);cursor:pointer}
+.go:active{transform:translateY(4px);box-shadow:0 2px 0 var(--outline)}
+.go:disabled{opacity:.65;cursor:progress}
+.mini{font:400 .95rem "Lilita One",sans-serif;background:var(--purple);color:#fff;border:3px solid var(--outline);border-radius:10px;padding:5px 10px;box-shadow:0 3px 0 var(--outline);cursor:pointer;margin:6px 6px 0 0}
+.skills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.skill{font:400 .85rem/1.1 "Lilita One",sans-serif;color:#fff;background:var(--purple);border:3px solid var(--outline);border-radius:10px;padding:8px 2px;box-shadow:0 3px 0 var(--outline);cursor:pointer;text-shadow:0 1px 0 var(--outline)}
+.skill[aria-pressed="true"]{background:var(--yellow);color:var(--yellow-ink);text-shadow:none;transform:translateY(2px);box-shadow:0 1px 0 var(--outline),0 0 12px rgba(255,210,31,.6)}
+.skill:focus-visible{outline:4px solid #fff;outline-offset:2px}
+@media(max-width:420px){.skill{font-size:.72rem}}
+.big{font:400 clamp(3rem,11vw,5rem)/1 "Lilita One",sans-serif;color:var(--ink)}
+.big span{font-size:.36em;color:var(--muted);margin-left:.25em}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-top:16px}
+.stat{background:var(--field);border:3px solid var(--outline);border-radius:12px;padding:8px 12px}
+.stat b{display:block;font:400 1.4rem "Lilita One",sans-serif}
+.stat em{font-style:normal;color:var(--muted);font-size:.82rem;font-weight:700}
+.note{color:var(--muted);font-size:.9rem;margin-top:14px}
+.warn{color:var(--warn);font-weight:800}
+.tablewrap{overflow-x:auto;margin-top:14px;border:3px solid var(--outline);border-radius:12px;max-height:420px;overflow-y:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{padding:7px 10px;text-align:right;border-bottom:2px solid var(--field);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{position:sticky;top:0;background:var(--yellow);color:var(--yellow-ink);font:400 .95rem "Lilita One",sans-serif}
+.bar{height:8px;background:var(--purple);border-radius:4px}
+.hidden{display:none}
+.progress{height:12px;background:var(--field);border:3px solid var(--outline);border-radius:8px;margin-top:12px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:var(--yellow)}
+footer{max-width:1000px;margin:0 auto;padding:18px 14px calc(26px + env(safe-area-inset-bottom,0px));text-align:center;color:#fff;opacity:.9;font-size:.82rem;font-weight:700;position:relative;z-index:1}
+footer b{font-family:"Lilita One",sans-serif;font-weight:400;letter-spacing:.02em}
+
+/* ===== Brawl style v1.3 ===== */
+body{
+  background:
+    radial-gradient(circle at 12% 8%,rgba(255,255,255,.22) 0 2px,transparent 3px) 0 0/34px 34px,
+    radial-gradient(ellipse at 50% -10%,rgba(255,210,31,.35),transparent 55%),
+    linear-gradient(170deg,var(--bg1),var(--bg2));
+  background-attachment:fixed;
+}
+.logo{transform:rotate(-2deg);font-size:clamp(1.8rem,6vw,2.5rem);text-shadow:-3px -3px 0 var(--outline),3px -3px 0 var(--outline),-3px 3px 0 var(--outline),3px 3px 0 var(--outline),0 5px 0 var(--outline)}
+.ver{transform:rotate(4deg)}
+.stroke{text-shadow:-3px -3px 0 var(--outline),3px -3px 0 var(--outline),-3px 3px 0 var(--outline),3px 3px 0 var(--outline),0 5px 0 var(--outline)}
+h1{filter:drop-shadow(0 4px 0 rgba(0,0,0,.25));letter-spacing:.01em}
+.chip{animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(3deg) translateY(-3px)}}
+.lead{font-size:1.05rem;text-shadow:0 2px 0 rgba(11,7,32,.45)}
+.panel{border-width:4px;border-radius:24px;box-shadow:0 8px 0 var(--outline),0 14px 28px rgba(11,7,32,.35);overflow:hidden}
+.panel > h2:first-child{background:linear-gradient(180deg,#3a2480,#24124f);color:var(--yellow);margin:-18px -18px 16px;padding:11px 18px;border-bottom:4px solid var(--outline);font-size:1.45rem;text-shadow:-2px -2px 0 var(--outline),2px -2px 0 var(--outline),-2px 2px 0 var(--outline),2px 2px 0 var(--outline),0 3px 0 var(--outline);letter-spacing:.02em}
+.mode,.tab,.mini,.skill{transition:transform .08s,box-shadow .08s,filter .12s}
+.mode{background:linear-gradient(180deg,#a070ff,#6a36d6);border-width:4px;border-radius:16px;box-shadow:inset 0 4px 0 rgba(255,255,255,.35),inset 0 -4px 0 rgba(0,0,0,.2),0 6px 0 var(--outline)}
+.mode:hover{filter:brightness(1.12);transform:translateY(-2px) rotate(-1deg)}
+.mode[aria-pressed="true"]{background:linear-gradient(180deg,#fff07a,#ffc400);box-shadow:inset 0 4px 0 rgba(255,255,255,.7),inset 0 -4px 0 rgba(0,0,0,.15),0 3px 0 var(--outline),0 0 22px rgba(255,210,31,.75);transform:translateY(3px)}
+.mode:active{transform:translateY(5px);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),0 1px 0 var(--outline)}
+.tab{border-radius:14px;border-width:4px;padding:8px 16px;background:rgba(11,7,32,.55)}
+.tab:hover{filter:brightness(1.25)}
+.skill{background:linear-gradient(180deg,#a070ff,#6a36d6);border-width:4px;border-radius:12px;padding:9px 4px;font-size:.95rem;box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 4px 0 var(--outline)}
+.skill:hover{filter:brightness(1.12);transform:translateY(-2px)}
+.skill[aria-pressed="true"]{background:linear-gradient(180deg,#fff07a,#ffc400);box-shadow:inset 0 3px 0 rgba(255,255,255,.7),0 1px 0 var(--outline),0 0 14px rgba(255,210,31,.7)}
+.skill:nth-child(1){grid-column:1/-1}
+input[type=number],textarea,.sel{border-width:4px;border-radius:12px;box-shadow:inset 0 3px 0 rgba(11,7,32,.12)}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline:4px solid var(--yellow)}
+.mini{background:linear-gradient(180deg,#a070ff,#6a36d6);box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 3px 0 var(--outline)}
+summary{color:var(--ink)}
+.go{background:linear-gradient(180deg,#9cf04a,#3fb41c);color:#fff;font-size:1.8rem;border-width:4px;border-radius:18px;padding:13px;box-shadow:inset 0 5px 0 rgba(255,255,255,.45),inset 0 -5px 0 rgba(0,0,0,.18),0 7px 0 var(--outline);text-shadow:-2px -2px 0 var(--outline),2px -2px 0 var(--outline),-2px 2px 0 var(--outline),2px 2px 0 var(--outline),0 3px 0 var(--outline);transition:transform .08s,box-shadow .08s,filter .12s}
+.go:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-2px)}
+.go:active{transform:translateY(5px);box-shadow:inset 0 4px 0 rgba(255,255,255,.35),0 2px 0 var(--outline)}
+.big{font-size:clamp(3.4rem,12vw,5.6rem);color:#fff;text-shadow:-3px -3px 0 var(--outline),3px -3px 0 var(--outline),-3px 3px 0 var(--outline),3px 3px 0 var(--outline),0 6px 0 var(--outline);animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+.big span{color:var(--yellow);text-shadow:-2px -2px 0 var(--outline),2px -2px 0 var(--outline),-2px 2px 0 var(--outline),2px 2px 0 var(--outline),0 3px 0 var(--outline)}
+@keyframes pop{from{transform:scale(.7)}to{transform:scale(1)}}
+.stat{border-width:4px;border-radius:14px;box-shadow:0 4px 0 var(--outline);background:var(--field)}
+.stat b{color:var(--ink)}
+.tablewrap{border-width:4px;border-radius:14px}
+th{border-bottom:3px solid var(--outline)}
+.progress{border-width:4px;height:16px}
+.progress i{background:repeating-linear-gradient(135deg,#ffd21f 0 12px,#ffb800 12px 24px);transition:width .15s;animation:barmove .8s linear infinite;background-size:34px 34px}
+@keyframes barmove{to{background-position:34px 0}}
+.bar{background:linear-gradient(180deg,#a070ff,#6a36d6);border:2px solid var(--outline);height:12px}
+footer{text-shadow:0 2px 0 rgba(11,7,32,.5)}
+
+/* ===== wybor rang ===== */
+.rkpick{margin-top:4px}
+.rks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.rk{--a:#999;--b:#555;display:flex;flex-direction:column;align-items:center;gap:1px;border:4px solid var(--outline);border-radius:14px 14px 22px 22px;background:linear-gradient(180deg,var(--a),var(--b));color:#fff;font:400 .74rem/1.05 "Lilita One",sans-serif;padding:7px 1px 6px;cursor:pointer;box-shadow:inset 0 3px 0 rgba(255,255,255,.45),0 4px 0 var(--outline);text-shadow:-1px -1px 0 var(--outline),1px -1px 0 var(--outline),-1px 1px 0 var(--outline),1px 1px 0 var(--outline);filter:saturate(.7) brightness(.9);transition:transform .08s,filter .12s}
+.rk i{font-style:normal;font-size:1.4rem;line-height:1.1}
+.rk:hover{filter:saturate(1) brightness(1.05);transform:translateY(-2px)}
+.rk[aria-pressed="true"]{filter:none;transform:translateY(2px) scale(1.05);box-shadow:inset 0 3px 0 rgba(255,255,255,.6),0 1px 0 var(--outline),0 0 0 3px #fff,0 0 16px var(--a)}
+.rk[aria-pressed="true"] i{animation:starspin 2.4s ease-in-out infinite}
+@keyframes starspin{0%,100%{transform:rotate(0) scale(1)}50%{transform:rotate(25deg) scale(1.25)}}
+.rk:focus-visible,.tier:focus-visible{outline:4px solid #fff;outline-offset:2px}
+.tiers{display:flex;gap:8px;margin-top:10px}
+.tier{--a:#999;--b:#555;flex:1;font:400 1.1rem "Lilita One",sans-serif;color:#fff;background:rgba(11,7,32,.45);border:4px solid var(--outline);border-radius:12px;padding:4px 0;cursor:pointer;box-shadow:0 3px 0 var(--outline)}
+.tier[aria-pressed="true"]{background:linear-gradient(180deg,var(--a),var(--b));box-shadow:inset 0 3px 0 rgba(255,255,255,.5),0 1px 0 var(--outline);transform:translateY(2px);text-shadow:-1px -1px 0 var(--outline),1px -1px 0 var(--outline),-1px 1px 0 var(--outline),1px 1px 0 var(--outline)}
+.rkinfo{margin:8px 0 0;font:400 1.05rem "Lilita One",sans-serif;color:var(--ink)}
+.rkinfo small{font:700 .85rem "Nunito",sans-serif;color:var(--muted)}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:3px solid var(--outline);margin-right:6px;vertical-align:-2px}
+
+/* ===== animowane tlo ===== */
+.bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.bg::before{content:"";position:absolute;inset:-100px;background:repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 22px,rgba(255,255,255,0) 22px 44px);animation:stripes 3s linear infinite}
+@keyframes stripes{to{transform:translate(31.1px,31.1px)}}
+.bg .orb{position:absolute;border-radius:50%;filter:blur(40px);opacity:.5}
+.bg .o1{width:340px;height:340px;background:#ffd21f;left:-80px;top:10%;animation:drift1 18s ease-in-out infinite alternate}
+.bg .o2{width:420px;height:420px;background:#a070ff;right:-120px;top:35%;animation:drift2 22s ease-in-out infinite alternate}
+.bg .o3{width:300px;height:300px;background:#3fb41c;left:30%;bottom:-120px;opacity:.35;animation:drift1 26s ease-in-out infinite alternate-reverse}
+@keyframes drift1{to{transform:translate(160px,-90px) scale(1.2)}}
+@keyframes drift2{to{transform:translate(-200px,70px) scale(.85)}}
+.bg .sym{position:absolute;bottom:-60px;opacity:.24;color:#ffd21f;animation:rise linear infinite;filter:drop-shadow(0 3px 0 rgba(11,7,32,.35))}
+@keyframes rise{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(30px,-60vh) rotate(180deg)}100%{transform:translate(-20px,-125vh) rotate(360deg)}}
+
+/* ===== animacje wejscia i interakcji ===== */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
+.brand{animation:fadeUp .5s backwards}
+h1{animation:fadeUp .6s .06s backwards}
+.lead{animation:fadeUp .6s .12s backwards}
+.grid > .panel:nth-child(1){animation:fadeUp .6s .2s backwards}
+.grid > .panel:nth-child(2){animation:fadeUp .6s .32s backwards}
+.mode.enter{animation:popIn .5s cubic-bezier(.2,1.5,.4,1) backwards}
+#out > *{animation:fadeUp .4s backwards}
+#out .stat{animation:popIn .45s cubic-bezier(.2,1.5,.4,1) backwards}
+#out .stat:nth-child(2){animation-delay:.06s}#out .stat:nth-child(3){animation-delay:.12s}
+#out .stat:nth-child(4){animation-delay:.18s}#out .stat:nth-child(5){animation-delay:.24s}
+#out .stat:nth-child(6){animation-delay:.3s}
+#out tbody tr{animation:fadeUp .35s backwards}
+.logo{animation:logoWob 4s ease-in-out infinite}
+@keyframes logoWob{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(1deg) translateY(-3px)}}
+.go{position:relative;overflow:hidden}
+.go::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:shine 3s ease-in-out infinite;pointer-events:none}
+.go:disabled::after{animation-duration:.7s}
+@keyframes shine{0%,55%{left:-60%}100%{left:130%}}
+.ver{animation:verTilt 5s ease-in-out infinite}
+@keyframes verTilt{0%,100%{transform:rotate(4deg)}50%{transform:rotate(-2deg) scale(1.06)}}
+
+/* ===== jezyk + youtube ===== */
+.lang{display:flex;gap:6px}
+.lg{font:400 .95rem "Lilita One",sans-serif;color:#fff;background:rgba(11,7,32,.55);border:3px solid var(--outline);border-radius:10px;padding:4px 11px;cursor:pointer;transition:transform .08s,filter .12s}
+.lg:hover{filter:brightness(1.3);transform:translateY(-2px)}
+.lg[aria-pressed="true"]{background:linear-gradient(180deg,#fff07a,#ffc400);color:var(--yellow-ink);box-shadow:0 0 14px rgba(255,210,31,.7)}
+.yt{display:inline-flex;align-items:center;gap:6px;font:400 .95rem "Lilita One",sans-serif;color:#fff;text-decoration:none;background:linear-gradient(180deg,#ff6b5e,#e5271c);border:3px solid var(--outline);border-radius:10px;padding:4px 11px;box-shadow:inset 0 3px 0 rgba(255,255,255,.35),0 3px 0 var(--outline);text-shadow:0 2px 0 var(--outline);transition:transform .08s,filter .12s}
+.yt:hover{filter:brightness(1.12);transform:translateY(-2px) rotate(-1deg)}
+.yt i{font-style:normal;display:inline-block;animation:ytpulse 1.6s ease-in-out infinite}
+@keyframes ytpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+footer a{color:var(--yellow);text-decoration:none;font-family:"Lilita One",sans-serif;font-weight:400;letter-spacing:.02em}
+footer a:hover{text-decoration:underline}
+footer .made{margin-top:8px;font-size:.95rem}
+
+/* ===== okienko suba ===== */
+.mback{position:fixed;inset:0;background:rgba(11,7,32,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100;opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s}
+.mback.show{opacity:1;visibility:visible;transition:opacity .25s}
+.modal{max-width:420px;width:100%;text-align:center;transform:scale(.6) rotate(-4deg);transition:transform .4s cubic-bezier(.2,1.6,.4,1);background:var(--panel);border:4px solid var(--outline);border-radius:24px;padding:22px;box-shadow:0 8px 0 var(--outline),0 0 40px rgba(255,210,31,.4)}
+.mback.show .modal{transform:none}
+.bell{font-size:3.4rem;line-height:1.1;display:inline-block;transform-origin:50% 0;animation:ring 1.4s ease-in-out infinite}
+@keyframes ring{0%,55%,100%{transform:rotate(0)}10%{transform:rotate(18deg)}20%{transform:rotate(-16deg)}30%{transform:rotate(12deg)}40%{transform:rotate(-8deg)}50%{transform:rotate(4deg)}}
+.modal h2{font-size:1.7rem;margin:6px 0 8px}
+.modal p{margin:0 0 16px;color:var(--muted)}
+.subbtn{display:block;text-decoration:none;text-align:center;font:400 1.5rem "Lilita One",sans-serif;color:#fff;background:linear-gradient(180deg,#ff6b5e,#e5271c);border:4px solid var(--outline);border-radius:16px;padding:11px;box-shadow:inset 0 4px 0 rgba(255,255,255,.4),0 6px 0 var(--outline);text-shadow:-2px -2px 0 var(--outline),2px -2px 0 var(--outline),-2px 2px 0 var(--outline),2px 2px 0 var(--outline),0 3px 0 var(--outline);position:relative;overflow:hidden}
+.subbtn::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:shine 2.2s ease-in-out infinite}
+.subbtn:active{transform:translateY(4px);box-shadow:inset 0 3px 0 rgba(255,255,255,.3),0 2px 0 var(--outline)}
+.modal .mini{margin:14px 0 0}
+
+/* ===== konfetti ===== */
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:60;overflow:hidden}
+.confetti i{position:absolute;top:50%;width:10px;height:14px;border:2px solid var(--outline);border-radius:3px;animation:conf 1.9s cubic-bezier(.3,.6,.4,1) forwards}
+@keyframes conf{
+  0%{transform:translate(0,0) rotate(0);opacity:1}
+  40%{transform:translate(calc(var(--dx)*.6),var(--dy)) rotate(calc(var(--rot)*.5));opacity:1}
+  100%{transform:translate(var(--dx),420px) rotate(var(--rot));opacity:0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<div class="bg" id="bg" aria-hidden="true"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div class="wrap">
+  <div class="brand">
+    <div class="logo stroke">Brawl<span>Calculator</span></div><span class="ver">1.1 beta</span>
+    <div class="topright">
+      <div class="lang" role="group" aria-label="Language / Jezyk">
+        <button class="lg" type="button" data-lang="pl" aria-pressed="true">PL</button>
+        <button class="lg" type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="yt" href="https://www.youtube.com/@solovgx" target="_blank" rel="noopener"><i>&#9654;</i> Made by @solovgx</a>
+    </div>
+  </div>
+  <h1 class="stroke"><span data-i="hq1">Ile godzin do </span><em id="goalTxt">1000 trofeow</em>?<span class="chip" id="prestige">Prestiz 1</span></h1>
+  <p class="lead" data-i="lead"></p>
+
+  <div class="modes" id="modes" role="group" aria-label="Mode"></div>
+
+  <div class="tabs" id="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="one" data-i="tabOne"></button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="all" data-i="tabAll"></button>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2 id="setTitle">Ustawienia</h2>
+
+      <div id="rankBox" class="hidden">
+        <label data-i="rankNow"></label>
+        <div class="rkpick" id="pickFrom"></div>
+        <label data-i="rankGoal"></label>
+        <div class="rkpick" id="pickTo"></div>
+      </div>
+
+      <label data-i="skillLbl"></label>
+      <div class="skills" id="skills" role="group" aria-label="Skill"></div>
+      <p class="note" id="skillNote" style="margin-top:8px"></p>
+
+      <div id="wlBox">
+        <div id="oneInputs">
+          <label for="wr">Win rate (%)</label>
+          <input id="wr" type="number" step="0.1" min="1" max="99" value="50">
+        </div>
+      </div>
+
+      <div id="plBox" class="hidden">
+        <div id="chBox">
+          <label for="chTbl" data-i="chLbl"></label>
+          <textarea id="chTbl" rows="6"></textarea>
+          <p class="note" data-i="chNote"></p>
+        </div>
+        <details>
+          <summary data-i="plSum"></summary>
+          <label for="plTbl" data-i="plLbl"></label>
+          <textarea id="plTbl" rows="12"></textarea>
+        </details>
+      </div>
+
+      <div class="row">
+        <div><label for="mlen" id="mlenLbl"></label><input id="mlen" type="number" step="0.1" min="0.5" value="2.5"></div>
+        <div><label for="sims" data-i="sims"></label><input id="sims" type="number" step="100" min="100" max="20000" value="1500"></div>
+      </div>
+      <div class="row">
+        <div><label for="start" id="startLbl"></label><input id="start" type="number" min="0" value="0"></div>
+        <div><label for="target" id="targetLbl"></label><input id="target" type="number" min="1" value="1000"></div>
+      </div>
+
+      <div id="splitBox" class="hidden">
+        <label for="split" data-i="splitLbl"></label>
+        <input id="split" type="number" min="1" max="10" value="3">
+        <p class="note" data-i="splitNote"></p>
+      </div>
+
+      <details id="streakBox">
+        <summary data-i="streakSum"></summary>
+        <div class="row">
+          <div><label for="sFrom" data-i="sFrom"></label><input id="sFrom" type="number" min="1" value="2"></div>
+          <div><label for="sBonus" data-i="sBonus"></label><input id="sBonus" type="number" min="0" value="1"></div>
+        </div>
+        <div class="row">
+          <div><label for="sCap" data-i="sCap"></label><input id="sCap" type="number" min="0" value="10"></div>
+          <div><label for="sMax" data-i="sMax"></label><input id="sMax" type="number" min="0" value="2000"></div>
+        </div>
+        <div id="sPlaceBox" class="hidden">
+          <label for="sPlace" data-i="sPlace"></label>
+          <input id="sPlace" type="number" min="0" value="0">
+        </div>
+        <p class="note" data-i="streakNote"></p>
+      </details>
+
+      <details id="rankExtra" class="hidden">
+        <summary data-i="rankSetSum"></summary>
+        <div class="row">
+          <div><label for="lobbyMin" data-i="lobby"></label><input id="lobbyMin" type="number" step="0.1" min="0" value="0.5"></div>
+          <div><label for="draftMin" data-i="draft"></label><input id="draftMin" type="number" step="0.1" min="0" value="1"></div>
+        </div>
+        <div class="row">
+          <div><label for="boostPct" data-i="boost"></label><input id="boostPct" type="number" step="1" min="0" max="200" value="0"></div>
+          <div><label for="boostTo" data-i="boostTo"></label><select id="boostTo" class="sel"></select></div>
+        </div>
+        <p class="note" data-i="rankNote"></p>
+      </details>
+
+      <details id="tblBox">
+        <summary id="tblSum"></summary>
+        <label for="tbl" id="tblLbl"></label>
+        <textarea id="tbl" rows="12"></textarea>
+      </details>
+
+      <div id="allInputs" class="hidden">
+        <div id="statBox" class="hidden">
+          <label for="statType" data-i="statType"></label>
+          <select id="statType" class="sel">
+            <option value="mean" data-i="statMean"></option>
+            <option value="p1" data-i="statP1"></option>
+          </select>
+        </div>
+        <label for="data" id="dataLbl"></label>
+        <textarea id="data" rows="9"></textarea>
+      </div>
+
+      <button class="go" id="run" data-i="run"></button>
+      <div class="progress hidden" id="prog"><i id="progbar"></i></div>
+    </div>
+
+    <div class="panel" id="out"></div>
+  </div>
+</div>
+<footer>
+  <div>&copy; 2026 <b>BrawlCalculator</b> v1.1 beta. <span data-i="foot1"></span><br><span data-i="foot2"></span></div>
+  <div class="made">Made by <a href="https://www.youtube.com/@solovgx" target="_blank" rel="noopener">@solovgx</a> &middot; <a href="https://www.youtube.com/@solovgx" target="_blank" rel="noopener">youtube.com/@solovgx</a></div>
+</footer>
+
+<div class="mback" id="mback" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="modal">
+    <div class="bell" aria-hidden="true">&#128276;</div>
+    <h2 id="mTitle" data-i="mTitle"></h2>
+    <p data-i="mText"></p>
+    <a class="subbtn" id="mSub" href="https://www.youtube.com/@solovgx" target="_blank" rel="noopener">&#9654; <span data-i="mBtn"></span></a>
+    <button class="mini" id="mClose" type="button" data-i="mClose"></button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ================= JEZYKI / LANGUAGES =================
+  const I18N = {
+    pl: {
+      hq1: `Ile godzin do `,
+      lead: `Wybierz tryb, wpisz swoje dane, a kalkulator rozegra za Ciebie tysiace meczow i poda sredni czas do celu.`,
+      tabOne: `Jeden brawler`, tabAll: `Wszystkie postacie`,
+      settings: `Ustawienia: {0}`,
+      rankNow: `Ranga teraz <small>(kliknij, a Elo wpisze sie samo)</small>`,
+      rankGoal: `Cel: ranga`,
+      skillLbl: `Poziom gry <small>(opcjonalnie, zwieksza szanse na wygrane / wyzsze miejsca)</small>`,
+      chLbl: `Szanse na miejsca <small>(miejsce, szansa w %)</small>`,
+      chNote: `Szanse sumuja sie automatycznie do 100%. Wybor poziomu gry wypelnia ta tabele, ale mozesz ja potem recznie poprawic.`,
+      plSum: `Tabela trofeow za miejsca`,
+      plLbl: `Linia: od ilu trofeow, potem zmiana za #1, #2, ...`,
+      mlenMatch: `Czas meczu <small>(min)</small>`, mlenRound: `Czas rundy <small>(min)</small>`,
+      sims: `Symulacji`,
+      startTr: `Trofea teraz`, startElo: `Elo teraz`, targetTr: `Cel (trofea)`, targetElo: `Cel (Elo)`,
+      splitLbl: `Zmiana trofeow dzielona na X brawlerow <small>(Duels: 3)</small>`,
+      splitNote: `W Duels zmiana z tabeli rozklada sie na 3 brawlerow, wiec kazdy dostaje jej czesc. Wynik to czas dla calej trojki naraz. Wpisz 1, jesli chcesz pelna zmiane dla jednego brawlera.`,
+      streakSum: `Bonus za serie wygranych`,
+      sFrom: `Od ktorej wygranej`, sBonus: `Bonus na start`, sCap: `Maksymalny bonus`, sMax: `Dziala do <small>(trofea)</small>`,
+      sPlace: `Wygrana to miejsce do <small>(0 = bez serii)</small>`,
+      streakNote: `Domyslnie: 2. wygrana z rzedu = +1, kazda kolejna o 1 wiecej, maksymalnie +10 (przy 11. wygranej). Od 2000 trofeow seria nie daje bonusu.`,
+      rankSetSum: `Ustawienia Rankedow`,
+      lobby: `Szukanie meczu <small>(min, Brazowa-Zlota)</small>`,
+      draft: `Bany i draft <small>(min, Diament)</small>`,
+      boost: `Rank Boost <small>(% extra za wygrana)</small>`,
+      boostTo: `Boost dziala do`,
+      rankNote: `Rank Boost to bonus po resecie sezonu: +10% Elo za wygrana, dopoki nie wrocisz do rangi z poprzedniego sezonu (maks. do Legendarna 1). Wpisz 0, jesli go nie masz. Od Mitycznej mecz to best-of-3, a ponizej Mitycznej nie spadniesz nizej niz na poczatek osiagnietej rangi glownej (np. Zlotej).`,
+      tblSumTr: `Tabela trofeow`, tblSumElo: `Tabela Elo`,
+      tblLblTr: `Linia: od ilu trofeow, za wygrana, za przegrana`, tblLblElo: `Linia: od ilu Elo, za wygrana, za przegrana`,
+      statType: `Druga kolumna w tabeli to:`, statMean: `Srednie miejsce`, statP1: `Szansa na 1. miejsce (%)`,
+      dataLblPlace: `Lista brawlerow <small>(nazwa, wartosc z drugiej kolumny, pick rate)</small>`,
+      dataLblWl: `Lista brawlerow <small>(nazwa, win rate, pick rate)</small>`,
+      dataPh: `Wendy 67.2 2.6\nBolt 65.1 9.4\nShelly 44.5 7.3\n\nMozesz tez wkleic tabele prosto ze strony ze statystykami.`,
+      run: `Policz!`, running: `Licze...`,
+      resultH: `Wynik`, resultHint: `Ustaw dane i kliknij "Policz!".`,
+      foot1: `Wszelkie prawa zastrzezone.`,
+      foot2: `Projekt fanowski, niezwiazany z firma Supercell. Brawl Stars jest znakiem towarowym Supercell.`,
+      mTitle: `Podoba Ci sie kalkulator?`,
+      mText: `Wpadnij na YouTube i zostaw suba na kanale @solovgx. To nic nie kosztuje, a bardzo mi pomaga!`,
+      mBtn: `Subskrybuj`, mClose: `Moze pozniej`,
+      rankPrefix: `rangi `, trophies: `trofeow`, prestige: `Prestiz`,
+      sk_none: `Bez poziomu`, sk_weak: `Slaby`, sk_avg: `Przecietny`, sk_good: `Dobry`, sk_vgood: `Bardzo dobry`, sk_pro: `Pro`,
+      skNone: `Bez poziomu: licze dokladnie z wpisanych danych, bez zadnej poprawki. Reszte robi losowosc symulacji.`,
+      skPlacePro: `Pro: 99% szans na 1. miejsce.`,
+      skPlace: `Poziom wplywa na szanse zajecia wyzszych miejsc.`,
+      skOnePro: `Pro: win rate 99%.`,
+      skOne: `Win rate po uwzglednieniu poziomu: {0}%.`,
+      skAllPro: `Pro: win rate 99% dla kazdego brawlera.`,
+      skAll: `Win rate z listy to srednia graczy. Poziom gry dodaje do niego poprawke.`,
+      errGoal: `Cel musi byc wiekszy niz obecne trofea.`,
+      errTbl: `Tabela trofeow jest pusta lub zle wpisana.`,
+      errPlTbl: `Tabela trofeow za miejsca jest pusta lub zle wpisana.`,
+      errCols: `Kazda linia tabeli musi miec tyle samo kolumn.`,
+      errCh: `Wpisz szanse dla wszystkich {0} miejsc.`,
+      errChSum: `Szanse na miejsca musza byc wieksze od zera.`,
+      errElo: `Tabela Elo jest pusta lub zle wpisana.`,
+      resTitle: `Ile godzin do {0}?`,
+      warnRank: `Przy tych ustawieniach praktycznie nie dojdziesz do celu (wiekszosc symulacji nie konczy sie w 20 000 meczow). Za wyzszymi rangami przegrana boli tyle samo co wygrana daje, wiec potrzebny jest win rate wyraznie powyzej 50%.`,
+      warnGen: `Przy tych ustawieniach praktycznie nie dojdziesz do celu (wiekszosc symulacji nie konczy sie w 20 000 meczow).`,
+      hrsAvg: `godz. srednio`,
+      rkMatches: `meczow rankingowych`, rkRounds: `rund srednio`, rkWr: `win rate (z poziomem)`,
+      lucky: `szczesliwy przebieg (10%)`, median: `srodkowy wynik`, unlucky: `pechowy przebieg (90%)`,
+      whereTime: `Gdzie spedzisz czas`, thRank: `Ranga`, thHours: `Godzin`,
+      rkNote1: `Z {0} symulacji. Poziom gry: {1}. Wygrana daje wg tabeli Elo, przegrana odejmuje. Ranga od Mitycznej to best-of-3 (win rate liczony na cala serie), nizej jeden mecz. `,
+      rkBoostNote: `Rank Boost +{0}% dziala do {1}. `,
+      rkNote2: `Progi Elo i +100 za wygrana pochodza z danych 2026, a straty dla Srebrnej, Zlotej i stopni 2-3 Diamentu oraz Mitycznej to moje szacunki (mozesz je poprawic w tabeli Elo). Czasy draftu i szukania meczu tez sa przyblizone.`,
+      matchesAvg: `meczow srednio`, placeStart: `trofeow na mecz na starcie`,
+      oneNote: `Z {0} symulacji, przy czasie meczu {1} min.`,
+      lvlN: `Poziom gry: {0}`, lvlWr: ` (win rate {0}%)`,
+      streakPl: ` Seria liczy sie od miejsca 1 do {0}.`,
+      splitRes: ` Czas dotyczy calej trojki brawlerow naraz (zmiana trofeow dzielona na {0}).`,
+      wghtLbl: `godz. (wazona pick rate)`, simpleTime: `zwykla srednia czasow`,
+      simpleStat: `zwykla srednia: {0}`, wStat: `wazona pick rate: {0}`, matchesW: `meczow (wazona)`,
+      thBrawler: `Brawler`, thPick: `Pick rate`, thMatches: `Meczow`,
+      noneReach: `Przy tych ustawieniach zaden brawler nie dochodzi do celu.`,
+      noBrPlace: `Nie rozpoznalem zadnego brawlera. Wpisz linie w formacie: Nazwa wartosc pickrate.`,
+      noBrWl: `Nie rozpoznalem zadnego brawlera. Wpisz linie w formacie: Nazwa winrate pickrate.`,
+      noFit: `Zadna wartosc nie pasuje do wybranej kolumny. Srednie miejsce miesci sie miedzy 1 a {0}.`,
+      colMean: `Sr. miejsce`, colP1: `Szansa 1.`, colWr: `Win rate`,
+      lblMean: `srednie miejsce`, lblP1: `szansa na 1. miejsce`, lblWr: `win rate`,
+      plBatchNote: `Poziom gry: {0}. Z kazdej wartosci wyliczam rozklad miejsc (dla tego poziomu) i symuluje mecze z tabela trofeow za miejsca.`,
+      skipped: ` Pominalem {0} wierszy z wartoscia spoza zakresu.`,
+      wlN1: `Poziom gry: {0}`, wlNpro: ` (win rate 99%).`, wlNadj: ` (poprawka dodana do win rate z listy).`,
+      wlN2: ` Wazona srednia pokazuje, jak realnie gra wiekszosc graczy. Zwykla traktuje kazdego brawlera tak samo.`,
+      from: `od {0} Elo`, you: ` (ty: {0})`
+    },
+    en: {
+      hq1: `How many hours to `,
+      lead: `Pick a mode, enter your stats and the calculator will play thousands of matches for you and tell you the average time to your goal.`,
+      tabOne: `One brawler`, tabAll: `All brawlers`,
+      settings: `Settings: {0}`,
+      rankNow: `Current rank <small>(click and the Elo fills in by itself)</small>`,
+      rankGoal: `Goal: rank`,
+      skillLbl: `Skill level <small>(optional, raises your chance of wins / higher places)</small>`,
+      chLbl: `Place chances <small>(place, chance in %)</small>`,
+      chNote: `Chances are automatically normalised to 100%. Picking a skill level fills this table, but you can edit it by hand afterwards.`,
+      plSum: `Trophies per place table`,
+      plLbl: `Line: from how many trophies, then change for #1, #2, ...`,
+      mlenMatch: `Match time <small>(min)</small>`, mlenRound: `Round time <small>(min)</small>`,
+      sims: `Simulations`,
+      startTr: `Trophies now`, startElo: `Elo now`, targetTr: `Goal (trophies)`, targetElo: `Goal (Elo)`,
+      splitLbl: `Trophy change split between X brawlers <small>(Duels: 3)</small>`,
+      splitNote: `In Duels the change from the table is spread across 3 brawlers, so each gets a part of it. The result is the time for all three at once. Enter 1 if you want the full change for a single brawler.`,
+      streakSum: `Win streak bonus`,
+      sFrom: `From which win`, sBonus: `Starting bonus`, sCap: `Maximum bonus`, sMax: `Works up to <small>(trophies)</small>`,
+      sPlace: `A win is place up to <small>(0 = no streak)</small>`,
+      streakNote: `Default: 2nd win in a row = +1, each next one +1 more, max +10 (at the 11th win). From 2000 trophies a streak gives no bonus.`,
+      rankSetSum: `Ranked settings`,
+      lobby: `Matchmaking <small>(min, Bronze-Gold)</small>`,
+      draft: `Bans and draft <small>(min, Diamond)</small>`,
+      boost: `Rank Boost <small>(% extra per win)</small>`,
+      boostTo: `Boost works up to`,
+      rankNote: `Rank Boost is a bonus after a season reset: +10% Elo per win until you get back to your rank from the previous season (max. up to Legendary 1). Enter 0 if you do not have it. From Mythic up, a match is best-of-3, and below Mythic you cannot drop below the start of the main rank you reached (e.g. Gold).`,
+      tblSumTr: `Trophy table`, tblSumElo: `Elo table`,
+      tblLblTr: `Line: from how many trophies, per win, per loss`, tblLblElo: `Line: from how much Elo, per win, per loss`,
+      statType: `The second column in the table is:`, statMean: `Average place`, statP1: `Chance for 1st place (%)`,
+      dataLblPlace: `Brawler list <small>(name, value from the second column, pick rate)</small>`,
+      dataLblWl: `Brawler list <small>(name, win rate, pick rate)</small>`,
+      dataPh: `Wendy 67.2 2.6\nBolt 65.1 9.4\nShelly 44.5 7.3\n\nYou can also paste a table straight from a stats website.`,
+      run: `Calculate!`, running: `Calculating...`,
+      resultH: `Result`, resultHint: `Set your data and click "Calculate!".`,
+      foot1: `All rights reserved.`,
+      foot2: `Fan project, not affiliated with Supercell. Brawl Stars is a trademark of Supercell.`,
+      mTitle: `Enjoying the calculator?`,
+      mText: `Drop by YouTube and subscribe to @solovgx. It costs nothing and helps me a lot!`,
+      mBtn: `Subscribe`, mClose: `Maybe later`,
+      rankPrefix: `rank `, trophies: `trophies`, prestige: `Prestige`,
+      sk_none: `No level`, sk_weak: `Weak`, sk_avg: `Average`, sk_good: `Good`, sk_vgood: `Very good`, sk_pro: `Pro`,
+      skNone: `No level: I use your numbers exactly as entered, with no adjustment. The rest is simulation randomness.`,
+      skPlacePro: `Pro: 99% chance for 1st place.`,
+      skPlace: `Skill level affects the chance of reaching higher places.`,
+      skOnePro: `Pro: 99% win rate.`,
+      skOne: `Win rate after skill adjustment: {0}%.`,
+      skAllPro: `Pro: 99% win rate for every brawler.`,
+      skAll: `The win rate from the list is the players' average. Skill level adds an adjustment to it.`,
+      errGoal: `The goal must be higher than your current trophies.`,
+      errTbl: `The trophy table is empty or badly formatted.`,
+      errPlTbl: `The trophies-per-place table is empty or badly formatted.`,
+      errCols: `Every table line must have the same number of columns.`,
+      errCh: `Enter chances for all {0} places.`,
+      errChSum: `Place chances must be greater than zero.`,
+      errElo: `The Elo table is empty or badly formatted.`,
+      resTitle: `How many hours to {0}?`,
+      warnRank: `With these settings you will practically never reach the goal (most simulations do not finish within 20,000 matches). At higher ranks a loss hurts as much as a win gives, so you need a win rate clearly above 50%.`,
+      warnGen: `With these settings you will practically never reach the goal (most simulations do not finish within 20,000 matches).`,
+      hrsAvg: `hrs on average`,
+      rkMatches: `ranked matches`, rkRounds: `rounds on average`, rkWr: `win rate (with skill)`,
+      lucky: `lucky run (10%)`, median: `median result`, unlucky: `unlucky run (90%)`,
+      whereTime: `Where you will spend your time`, thRank: `Rank`, thHours: `Hours`,
+      rkNote1: `From {0} simulations. Skill level: {1}. A win gives Elo from the table, a loss subtracts. From Mythic up it is best-of-3 (win rate counted for the whole series), below that a single match. `,
+      rkBoostNote: `Rank Boost +{0}% works up to {1}. `,
+      rkNote2: `Elo thresholds and +100 per win come from 2026 data, while losses for Silver, Gold and tiers 2-3 of Diamond and Mythic are my own estimates (you can edit them in the Elo table). Draft and matchmaking times are approximate too.`,
+      matchesAvg: `matches on average`, placeStart: `trophies per match at start`,
+      oneNote: `From {0} simulations, with a match time of {1} min.`,
+      lvlN: `Skill level: {0}`, lvlWr: ` (win rate {0}%)`,
+      streakPl: ` The streak counts for places 1 to {0}.`,
+      splitRes: ` Time covers all three brawlers at once (trophy change split by {0}).`,
+      wghtLbl: `hrs (pick-rate weighted)`, simpleTime: `simple average time`,
+      simpleStat: `simple average: {0}`, wStat: `pick-rate weighted: {0}`, matchesW: `matches (weighted)`,
+      thBrawler: `Brawler`, thPick: `Pick rate`, thMatches: `Matches`,
+      noneReach: `With these settings no brawler reaches the goal.`,
+      noBrPlace: `I did not recognise any brawler. Enter lines in the format: Name value pickrate.`,
+      noBrWl: `I did not recognise any brawler. Enter lines in the format: Name winrate pickrate.`,
+      noFit: `No value fits the selected column. Average place is between 1 and {0}.`,
+      colMean: `Avg. place`, colP1: `1st chance`, colWr: `Win rate`,
+      lblMean: `average place`, lblP1: `chance for 1st place`, lblWr: `win rate`,
+      plBatchNote: `Skill level: {0}. From each value I derive the place distribution (for that level) and simulate matches with the trophies-per-place table.`,
+      skipped: ` I skipped {0} rows with out-of-range values.`,
+      wlN1: `Skill level: {0}`, wlNpro: ` (win rate 99%).`, wlNadj: ` (adjustment added to the win rate from the list).`,
+      wlN2: ` The weighted average shows how most players really play. The simple one treats every brawler equally.`,
+      from: `from {0} Elo`, you: ` (you: {0})`
+    }
+  };
+  let lang = 'pl';
+  try { const sl = localStorage.getItem('bc_lang'); if(sl === 'pl' || sl === 'en') lang = sl; } catch(e){}
+  const tr = (k, ...a) => {
+    let s = (I18N[lang] && I18N[lang][k] != null) ? I18N[lang][k] : (I18N.pl[k] != null ? I18N.pl[k] : k);
+    return s.replace(/\{(\d)\}/g, (m, i) => a[+i] != null ? a[+i] : '');
+  };
+  const LOC = () => lang === 'pl' ? 'pl-PL' : 'en-US';
+  const dc = s => lang === 'pl' ? String(s).replace('.', ',') : String(s);
+
+  const BRNL = {
+    pl: ['Brazowa','Srebrna','Zlota','Diamentowa','Mityczna','Legendarna','Mistrzowska','PRO'],
+    en: ['Bronze','Silver','Gold','Diamond','Mythic','Legendary','Masters','PRO']
+  };
+  const BRSL = {
+    pl: ['Brazowa','Srebrna','Zlota','Diament','Mityczna','Legend.','Mistrz.','PRO'],
+    en: ['Bronze','Silver','Gold','Diamond','Mythic','Legend.','Masters','PRO']
+  };
+  const brn = b => BRNL[lang][b];
+  const brs = b => BRSL[lang][b];
+
+  // ================= DANE / DATA =================
+  const T3 = `0 10 0
+50 10 1
+300 10 2
+600 10 3
+800 10 4
+1000 10 5
+1100 10 6
+1200 10 7
+1300 10 8
+1500 10 9
+1800 10 10
+2000 8 10
+2500 6 10
+2800 4 10
+3000 2 10
+3100 1 10
+4000 1 15`;
+  const TD = `0 12 1
+50 12 3
+800 12 6
+1200 12 9
+1800 12 12
+2000 9 12
+2500 6 12
+3000 3 12
+4000 3 15`;
+  const TA = `0 15 0
+50 15 1
+300 15 2
+600 15 4
+800 15 5
+1000 15 6
+1100 15 7
+1200 15 8
+1300 15 10
+1500 15 11
+1800 15 12
+2000 12 12
+2500 9 12
+2800 6 12
+3000 3 12
+3100 2 20
+4000 2 30`;
+  const TSOLO = `0 13 10 10 8 6 5 5 5 5 5
+50 13 10 9 7 5 4 3 2 1 -1
+100 13 10 9 7 4 3 2 1 0 -1
+200 13 10 8 5 3 2 1 -1 -1 -1
+300 13 10 8 5 3 2 1 -1 -2 -2
+500 13 10 8 5 2 1 -1 -1 -2 -2
+600 13 10 8 5 2 1 -2 -2 -3 -4
+800 13 10 8 5 2 1 -2 -3 -4 -5
+1000 13 10 8 5 1 -2 -3 -4 -5 -6
+1100 13 10 8 5 1 -2 -3 -4 -5 -7
+1200 13 10 8 5 1 -2 -4 -5 -6 -8
+1300 13 10 8 5 1 -2 -4 -6 -7 -10
+1500 13 10 8 5 0 -3 -5 -6 -8 -11
+1800 13 10 8 5 0 -3 -5 -7 -9 -12
+2000 10 8 6 4 -2 -3 -5 -7 -9 -12
+2500 8 6 5 3 -2 -3 -5 -7 -9 -12
+2600 8 6 5 2 -2 -3 -5 -7 -9 -12
+2700 8 6 5 1 -2 -3 -5 -7 -9 -12
+2800 5 4 3 0 -2 -3 -5 -7 -9 -12
+3000 4 3 2 0 -2 -3 -5 -7 -9 -12
+3100 3 2 1 -1 -2 -3 -5 -7 -9 -12
+4000 2 1 0 -2 -3 -5 -8 -11 -14 -18`;
+  const TDUO = `0 12 6 5 5 5
+50 12 6 4 2 -1
+100 12 6 3 1 -1
+200 12 6 2 -1 -1
+300 12 6 2 -1 -2
+600 12 6 2 -2 -3
+800 12 6 2 -2 -4
+1000 12 6 -1 -3 -5
+1100 12 6 -1 -4 -6
+1200 12 6 -1 -4 -7
+1300 12 6 -2 -5 -8
+1500 12 6 -2 -5 -9
+1800 12 6 -2 -6 -10
+2000 10 5 -2 -6 -10
+2300 10 4 -2 -6 -10
+2400 10 3 -2 -6 -10
+2500 7 2 -2 -6 -10
+2800 5 1 -2 -6 -10
+3000 3 1 -2 -6 -10
+3100 2 1 -2 -6 -10
+4000 2 0 -3 -9 -15`;
+  const TTRIO = `0 12 5 5 5
+50 11 5 4 -1
+100 11 5 3 -1
+200 11 5 2 -1
+300 11 5 2 -2
+500 11 5 1 -2
+600 11 5 1 -3
+800 11 5 1 -4
+1000 11 5 0 -6
+1100 11 5 0 -7
+1200 11 5 0 -8
+1300 11 5 0 -9
+1500 11 5 -5 -10
+1800 11 5 -5 -11
+2000 9 4 -5 -11
+2200 9 3 -5 -11
+2300 9 2 -5 -11
+2400 9 1 -5 -11
+2500 7 0 -5 -11
+2800 4 0 -5 -11
+3000 3 0 -5 -11
+3100 2 0 -5 -11
+4000 1 0 -8 -17`;
+
+  // Ranked 2026: progi Elo, +100 za wygrana, straty rosna z ranga.
+  // Straty dla Srebrnej, Zlotej oraz stopni 2-3 Diamentu i Mitycznej to MOJE SZACUNKI.
+  const TRANK = `0 100 0
+250 100 0
+500 100 0
+750 100 10
+1000 100 15
+1250 100 20
+1500 100 25
+2000 100 30
+2500 100 40
+3000 100 50
+3500 100 55
+4000 100 60
+4500 100 70
+5000 100 75
+5500 100 80
+6000 100 90
+6750 100 100
+7500 100 100
+8250 100 100
+9250 100 100
+10250 100 100
+11250 100 110`;
+  const THR = [0,250,500,750,1000,1250,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000,6750,7500,8250,9250,10250,11250];
+  const BR_START = [0,750,1500,3000,4500,6000,8250,11250];
+  const RK_COL = [
+    ['#f0a05a','#9c5321'], ['#eef3fa','#8d9bb0'], ['#ffe45c','#e0a000'], ['#8be8ff','#1d8cf0'],
+    ['#c79cff','#7a2fd6'], ['#ff8a7e','#c4271c'], ['#e6b86a','#8f5a1c'], ['#7be84f','#1f8a2a']
+  ];
+  const tierName = i => i >= 21 ? 'PRO' : brn(Math.floor(i / 3)) + ' ' + (i % 3 + 1);
+  const tierOf = e => { let r = 0; for(let i = 0; i < THR.length; i++) if(e >= THR[i]) r = i; return r; };
+  const bracketOf = e => { let b = 0; for(let i = 0; i < 8; i++) if(e >= BR_START[i]) b = i; return b; };
+  const goalName = e => { const i = THR.indexOf(e); return i >= 0 ? tierName(i) : Math.round(e).toLocaleString(LOC()) + ' Elo'; };
+
+  const MODES = {
+    solo: {name:'Solo Showdown', icon:'\u{1F464}', type:'place', mlen:3,   table:TSOLO},
+    duo:  {name:'Duo Showdown',  icon:'\u{1F465}', type:'place', mlen:3.5, table:TDUO},
+    trio: {name:'Trio Showdown', icon:'\u{1F9D1}\u200D\u{1F91D}\u200D\u{1F9D1}', type:'place', mlen:3.5, table:TTRIO},
+    v3:   {name:'3v3',           icon:'\u2694\uFE0F', type:'wl', mlen:2.5, table:T3},
+    v5:   {name:'5v5',           icon:'\u{1F6E1}\uFE0F', type:'wl', mlen:3, table:T3},
+    duels:{name:'Duels 1v1',     icon:'\u{1F94A}', type:'wl', mlen:2, table:TD, split:3},
+    arena:{name:'Brawl Arena',   icon:'\u{1F3DF}\uFE0F', type:'wl', mlen:2.5, table:TA},
+    ranked:{name:'Ranked',        icon:'\u{1F3C6}', type:'rank', mlen:2.5, table:TRANK}
+  };
+  let modeKey = 'v3', tab = 'one', wasRank = false, firstModes = true;
+
+  const nPlaces = m => m.table.split('\n')[0].trim().split(/\s+/).length - 1;
+
+  function weights(n, k){
+    const w = Array.from({length:n}, (_, i) => Math.exp(-k * i));
+    const s = w.reduce((a,b) => a+b, 0);
+    return w.map(x => x / s * 100);
+  }
+  const SKILLS = [
+    {key:'none',  shift:0,    k:0, none:true},
+    {key:'weak',  shift:-0.5, k:-0.1},
+    {key:'avg',   shift:0,    k:0},
+    {key:'good',  shift:0.45, k:0.2},
+    {key:'vgood', shift:1.0,  k:0.4},
+    {key:'pro',   pro:true}
+  ];
+  let skillKey = 'none';
+  const curSkill = () => SKILLS.find(s => s.key === skillKey);
+  const skName = s => tr('sk_' + s.key);
+
+  function adjWR(wr, s){
+    if(s.pro) return 0.99;
+    const p = Math.min(0.999, Math.max(0.001, wr));
+    return 1 / (1 + Math.exp(-(Math.log(p / (1 - p)) + s.shift)));
+  }
+  function skillChances(n, s){
+    if(s.pro){
+      const rest = weights(n - 1, 0.3);
+      return [99].concat(rest.map(x => x / 100));
+    }
+    return weights(n, s.k);
+  }
+  function tiltPlaces(w, s){
+    if(s.pro) return skillChances(w.length, s).map(x => x / 100);
+    if(!s.k) return w;
+    const t = w.map((x, i) => x * Math.exp(-s.k * i));
+    const sum = t.reduce((a, b) => a + b, 0);
+    return t.map(x => x / sum);
+  }
+  function fillChances(){
+    const m = MODES[modeKey], n = nPlaces(m), w = skillChances(n, curSkill());
+    $('chTbl').value = w.map((x, i) => (i+1) + ' ' + x.toFixed(1)).join('\n');
+  }
+  function updateSkillNote(){
+    const s = curSkill(), m = MODES[modeKey];
+    let txt;
+    if(s.none){
+      txt = tr('skNone');
+    } else if(m.type === 'place'){
+      txt = s.pro ? tr('skPlacePro') : tr('skPlace');
+    } else if(tab === 'one'){
+      const base = (+$('wr').value || 0) / 100;
+      const eff = adjWR(base, s) * 100;
+      txt = s.pro ? tr('skOnePro') : tr('skOne', dc(eff.toFixed(1)));
+    } else {
+      txt = s.pro ? tr('skAllPro') : tr('skAll');
+    }
+    $('skillNote').textContent = txt;
+  }
+  function renderSkills(){
+    $('skills').innerHTML = '';
+    SKILLS.forEach(s => {
+      const b = document.createElement('button');
+      b.className = 'skill'; b.textContent = skName(s);
+      b.setAttribute('aria-pressed', s.key === skillKey ? 'true' : 'false');
+      b.addEventListener('click', () => {
+        skillKey = s.key; renderSkills();
+        if(MODES[modeKey].type === 'place') fillChances();
+        updateSkillNote();
+      });
+      $('skills').appendChild(b);
+    });
+  }
+
+  function renderModes(){
+    $('modes').innerHTML = '';
+    Object.keys(MODES).forEach((key, idx) => {
+      const m = MODES[key];
+      const b = document.createElement('button');
+      b.className = 'mode' + (firstModes ? ' enter' : ''); b.setAttribute('aria-pressed', key === modeKey ? 'true' : 'false');
+      if(firstModes) b.style.animationDelay = (0.25 + idx * 0.06) + 's';
+      b.innerHTML = '<span class="ic">' + m.icon + '</span>' + m.name;
+      b.addEventListener('click', () => { modeKey = key; applyMode(true); });
+      $('modes').appendChild(b);
+    });
+    firstModes = false;
+  }
+
+  // statyczne teksty z data-i
+  function applyStatic(){
+    document.documentElement.lang = lang;
+    document.title = 'BrawlCalculator 1.1 beta';
+    document.querySelectorAll('[data-i]').forEach(el => { el.innerHTML = tr(el.dataset.i); });
+    $('data').setAttribute('placeholder', tr('dataPh'));
+    document.querySelectorAll('.lg').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang ? 'true' : 'false'));
+  }
+
+  function applyMode(reset){
+    const m = MODES[modeKey];
+    const place = m.type === 'place';
+    const rank = m.type === 'rank';
+    if(rank) tab = 'one';
+    renderModes();
+    $('tabs').classList.toggle('hidden', rank);
+    $('rankBox').classList.toggle('hidden', !rank);
+    $('rankExtra').classList.toggle('hidden', !rank);
+    $('streakBox').classList.toggle('hidden', rank);
+    $('mlenLbl').innerHTML = rank ? tr('mlenRound') : tr('mlenMatch');
+    $('startLbl').textContent = rank ? tr('startElo') : tr('startTr');
+    $('targetLbl').textContent = rank ? tr('targetElo') : tr('targetTr');
+    $('tblSum').textContent = rank ? tr('tblSumElo') : tr('tblSumTr');
+    $('tblLbl').textContent = rank ? tr('tblLblElo') : tr('tblLblTr');
+    $('wlBox').classList.toggle('hidden', place);
+    $('plBox').classList.toggle('hidden', !place);
+    $('tblBox').classList.toggle('hidden', place);
+    $('splitBox').classList.toggle('hidden', !m.split);
+    $('sPlaceBox').classList.toggle('hidden', !place);
+    $('oneInputs').classList.toggle('hidden', tab !== 'one');
+    $('chBox').classList.toggle('hidden', tab !== 'one');
+    $('allInputs').classList.toggle('hidden', tab !== 'all');
+    $('statBox').classList.toggle('hidden', !place);
+    $('dataLbl').innerHTML = place ? tr('dataLblPlace') : tr('dataLblWl');
+    document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x.dataset.tab === tab ? 'true' : 'false'));
+    $('setTitle').textContent = tr('settings', m.name);
+    if(reset){
+      $('mlen').value = m.mlen;
+      $('split').value = m.split || 1;
+      $('sPlace').value = 0;
+      if(place){ $('plTbl').value = m.table; fillChances(); }
+      else $('tbl').value = m.table;
+      if(rank){ $('start').value = 0; $('target').value = 4500; }
+      else if(wasRank){ $('start').value = 0; $('target').value = 1000; }
+      wasRank = rank;
+    }
+    renderPickers();
+    updateGoal();
+    updateSkillNote();
+    $('out').innerHTML = '<h2>' + tr('resultH') + '</h2><p class="note">' + tr('resultHint') + '</p>';
+  }
+
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { tab = b.dataset.tab; applyMode(false); }));
+  $('wr').addEventListener('input', updateSkillNote);
+
+  function updateGoal(){
+    const tv = +$('target').value || 0;
+    const isRank = MODES[modeKey].type === 'rank';
+    $('goalTxt').textContent = isRank ? (THR.indexOf(tv) >= 0 ? tr('rankPrefix') : '') + goalName(tv) : tv.toLocaleString(LOC()) + ' ' + tr('trophies');
+    const lvl = Math.floor(tv / 1000);
+    const chip = $('prestige');
+    chip.classList.toggle('hidden', lvl < 1 || isRank);
+    chip.textContent = tr('prestige') + ' ' + lvl;
+    chip.classList.toggle('p2', lvl === 2);
+    chip.classList.toggle('p3', lvl >= 3);
+  }
+  $('target').addEventListener('input', () => { renderPickers(); updateGoal(); });
+  $('start').addEventListener('input', renderPickers);
+
+  // ---- wybor rang
+  function buildPicker(boxId, inputId){
+    const box = $(boxId), elo = +$(inputId).value || 0, ti = tierOf(elo), br = ti >= 21 ? 7 : Math.floor(ti / 3);
+    const setElo = v => { $(inputId).value = v; renderPickers(); updateGoal(); };
+    box.innerHTML = '';
+    const grid = document.createElement('div'); grid.className = 'rks';
+    for(let b = 0; b < 8; b++){
+      const btn = document.createElement('button');
+      btn.className = 'rk'; btn.type = 'button';
+      btn.style.setProperty('--a', RK_COL[b][0]); btn.style.setProperty('--b', RK_COL[b][1]);
+      btn.setAttribute('aria-pressed', b === br ? 'true' : 'false');
+      btn.innerHTML = '<i>\u2605</i><span>' + brs(b) + '</span>';
+      btn.addEventListener('click', () => setElo(b === 7 ? THR[21] : THR[b * 3 + (br === b ? ti % 3 : 0)]));
+      grid.appendChild(btn);
+    }
+    box.appendChild(grid);
+    if(br < 7){
+      const row = document.createElement('div'); row.className = 'tiers';
+      for(let k = 0; k < 3; k++){
+        const tb = document.createElement('button');
+        tb.className = 'tier'; tb.type = 'button'; tb.textContent = String(k + 1);
+        tb.style.setProperty('--a', RK_COL[br][0]); tb.style.setProperty('--b', RK_COL[br][1]);
+        tb.setAttribute('aria-pressed', ti === br * 3 + k ? 'true' : 'false');
+        tb.addEventListener('click', () => setElo(THR[br * 3 + k]));
+        row.appendChild(tb);
+      }
+      box.appendChild(row);
+    }
+    const info = document.createElement('p'); info.className = 'rkinfo';
+    info.innerHTML = tierName(ti) + ' <small>' + tr('from', THR[ti].toLocaleString(LOC())) + (elo !== THR[ti] ? tr('you', Math.round(elo).toLocaleString(LOC())) : '') + '</small>';
+    box.appendChild(info);
+  }
+  function renderPickers(){
+    if(MODES[modeKey].type !== 'rank') return;
+    buildPicker('pickFrom', 'start'); buildPicker('pickTo', 'target');
+  }
+  function fillBoostSelect(){
+    const sel = $('boostTo'), cur = sel.value || '15';
+    sel.innerHTML = '';
+    THR.forEach((v, i) => { const o = document.createElement('option'); o.value = i; o.textContent = tierName(i); sel.appendChild(o); });
+    sel.value = cur;
+  }
+
+  function parseRows(text, minLen){
+    return text.split('\n').map(l => l.trim().split(/\s+/).map(x => Number(x.replace(',', '.')))).filter(r => r.length >= minLen && r.every(x => !isNaN(x)));
+  }
+
+  function baseConfig(){
+    const target = Math.max(1, +$('target').value);
+    const start = Math.max(0, +$('start').value);
+    if(start >= target) throw new Error(tr('errGoal'));
+    const c = {target, start, mlen: +$('mlen').value, sims: Math.max(100, +$('sims').value|0), maxM: 20000};
+    const sFrom = +$('sFrom').value, sBonus = +$('sBonus').value, sCap = +$('sCap').value;
+    c.streakMax = +$('sMax').value;
+    c.bonus = new Int16Array(200);
+    for(let s = 0; s < 200; s++) c.bonus[s] = s >= sFrom ? Math.min(sBonus + (s - sFrom), sCap) : 0;
+    return c;
+  }
+
+  function lookup(rows, target, col){
+    const arr = new Int16Array(target + 1);
+    let ri = 0;
+    for(let tt = 0; tt <= target; tt++){
+      while(ri+1 < rows.length && rows[ri+1][0] <= tt) ri++;
+      arr[tt] = rows[ri][0] <= tt ? rows[ri][col] : 0;
+    }
+    return arr;
+  }
+
+  function readWL(){
+    const c = baseConfig();
+    const rows = parseRows($('tbl').value, 3).sort((a,b) => a[0]-b[0]);
+    if(!rows.length) throw new Error(tr('errTbl'));
+    c.winArr = lookup(rows, c.target, 1);
+    c.lossArr = lookup(rows, c.target, 2);
+    c.split = Math.max(1, +$('split').value || 1);
+    c.scale = 1 / c.split;
+    return c;
+  }
+
+  function readPlace(needChances){
+    const c = baseConfig();
+    const rows = parseRows($('plTbl').value, 3).sort((a,b) => a[0]-b[0]);
+    if(!rows.length) throw new Error(tr('errPlTbl'));
+    const N = rows[0].length - 1;
+    if(rows.some(r => r.length !== N + 1)) throw new Error(tr('errCols'));
+    c.N = N;
+    c.dArr = [];
+    for(let p = 0; p < N; p++) c.dArr.push(lookup(rows, c.target, p + 1));
+    c.winPlace = Math.max(0, +$('sPlace').value | 0);
+    if(needChances){
+      const ch = parseRows($('chTbl').value, 2);
+      if(ch.length !== N) throw new Error(tr('errCh', N));
+      const sum = ch.reduce((a,r) => a + r[1], 0);
+      if(sum <= 0) throw new Error(tr('errChSum'));
+      c.chances = ch.map(r => r[1] / sum);
+      let acc = 0; c.cum = c.chances.map(x => (acc += x)); c.cum[N-1] = 1;
+      c.expStart = c.chances.reduce((a,x,p) => a + x * c.dArr[p][Math.min(c.start, c.target)], 0);
+    }
+    return c;
+  }
+
+  function onceWL(wr, c){
+    let t = c.start, s = 0, n = 0;
+    while(t < c.target && n < c.maxM){
+      n++;
+      const i = t | 0;
+      if(Math.random() < wr){
+        s++;
+        const b = i < c.streakMax ? c.bonus[s > 199 ? 199 : s] : 0;
+        t += (c.winArr[i] + b) * c.scale;
+      } else {
+        s = 0;
+        t -= c.lossArr[i] * c.scale; if(t < 0) t = 0;
+      }
+    }
+    return t >= c.target ? n : -1;
+  }
+  function oncePlace(c){
+    let t = c.start, s = 0, n = 0;
+    while(t < c.target && n < c.maxM){
+      n++;
+      const i = t | 0;
+      const r = Math.random();
+      let p = 0; while(r > c.cum[p]) p++;
+      let d = c.dArr[p][i];
+      if(c.winPlace > 0){
+        if(p + 1 <= c.winPlace){ s++; if(i < c.streakMax) d += c.bonus[s > 199 ? 199 : s]; }
+        else s = 0;
+      }
+      t += d; if(t < 0) t = 0;
+    }
+    return t >= c.target ? n : -1;
+  }
+
+  // ---- Ranked
+  function roundsBo3(sw){
+    let lo = 0, hi = 1;
+    for(let i = 0; i < 40; i++){ const q = (lo + hi) / 2; if(q * q * (3 - 2 * q) < sw) lo = q; else hi = q; }
+    const q = (lo + hi) / 2;
+    return 2 + 2 * q * (1 - q);
+  }
+  function readRank(){
+    const c = baseConfig();
+    c.streakMax = 0;
+    const rows = parseRows($('tbl').value, 3).sort((a,b) => a[0]-b[0]);
+    if(!rows.length) throw new Error(tr('errElo'));
+    c.winArr = lookup(rows, c.target, 1);
+    c.lossArr = lookup(rows, c.target, 2);
+    c.brOf = new Uint8Array(c.target + 1);
+    for(let i = 0; i <= c.target; i++) c.brOf[i] = bracketOf(i);
+    c.draft = Math.max(0, +$('draftMin').value || 0);
+    c.lobby = Math.max(0, +$('lobbyMin').value || 0);
+    c.boostPct = Math.max(0, +$('boostPct').value || 0);
+    c.boostUntil = THR[+$('boostTo').value] || 0;
+    c.goalName = (THR.indexOf(c.target) >= 0 ? tr('rankPrefix') : '') + goalName(c.target);
+    return c;
+  }
+  function onceRank(wr, c){
+    const br = new Float64Array(8);
+    let t = c.start, n = 0, min = 0, rnd = 0, fl = 0;
+    const b0 = c.brOf[t | 0]; if(b0 <= 3) fl = BR_START[b0];
+    while(t < c.target && n < c.maxM){
+      n++;
+      const i = t | 0, b = c.brOf[i], mm = c.serMin[b];
+      min += mm; br[b] += mm; rnd += c.serR[b];
+      if(Math.random() < wr){
+        let g = c.winArr[i];
+        if(c.boostPct > 0 && i < c.boostUntil) g = Math.floor(g * (1 + c.boostPct / 100));
+        t += g;
+        if(t < c.target){ const bb = c.brOf[t | 0]; if(bb <= 3 && BR_START[bb] > fl) fl = BR_START[bb]; }
+      } else {
+        t -= c.lossArr[i]; if(t < fl) t = fl; if(t < 0) t = 0;
+      }
+    }
+    return {ok: t >= c.target, n, min, br, rnd};
+  }
+
+  const fmtN = n => isFinite(n) ? Math.round(n).toLocaleString(LOC()) : '-';
+  const hoursOf = (n, c) => n * c.mlen / 60;
+  const fmtH = (n, c) => isFinite(n) ? dc(hoursOf(n, c).toFixed(1)) : '-';
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const title = c => '<h2>' + tr('resTitle', c.goalName || c.target.toLocaleString(LOC()) + ' ' + tr('trophies')) + '</h2>';
+  const bigHTML = (hours, label) => '<div class="big"' + (isFinite(hours) ? ' data-v="' + hours + '"' : '') + '>' + (isFinite(hours) ? dc(hours.toFixed(1)) : '-') + '<span>' + label + '</span></div>';
+
+  function showRank(c){
+    const s = curSkill();
+    const wr = adjWR(+$('wr').value / 100, s);
+    const r3 = roundsBo3(wr);
+    const bo1 = c.lobby + c.mlen, dr = c.draft + c.mlen;
+    c.serMin = [bo1, bo1, bo1, dr, c.draft * 1.5 + r3 * c.mlen, c.draft * 1.5 + r3 * c.mlen, c.draft * 1.5 + r3 * c.mlen, c.draft * 1.5 + r3 * c.mlen];
+    c.serR = [1, 1, 1, 1, r3, r3, r3, r3];
+    const mins = [], sumBr = new Float64Array(8); let sumN = 0, sumR = 0, fail = 0;
+    for(let i = 0; i < c.sims; i++){
+      const r = onceRank(wr, c);
+      if(!r.ok){ fail++; continue; }
+      mins.push(r.min); sumN += r.n; sumR += r.rnd;
+      for(let b = 0; b < 8; b++) sumBr[b] += r.br[b];
+    }
+    let html = title(c);
+    if(!mins.length || fail / c.sims > 0.5){
+      html += '<p class="warn">' + tr('warnRank') + '</p>';
+      $('out').innerHTML = html; return;
+    }
+    mins.sort((a,b) => a-b);
+    const ok = mins.length, mean = mins.reduce((a,b) => a+b, 0) / ok;
+    const q = p => mins[Math.min(ok-1, Math.floor(p*ok))];
+    const H = m => dc((m / 60).toFixed(1));
+    html += bigHTML(mean / 60, tr('hrsAvg'));
+    html += '<div class="stats">'
+      + '<div class="stat"><b>' + fmtN(sumN / ok) + '</b><em>' + tr('rkMatches') + '</em></div>'
+      + '<div class="stat"><b>' + fmtN(sumR / ok) + '</b><em>' + tr('rkRounds') + '</em></div>'
+      + '<div class="stat"><b>' + dc((wr * 100).toFixed(1)) + '%</b><em>' + tr('rkWr') + '</em></div>'
+      + '<div class="stat"><b>' + H(q(.1)) + ' h</b><em>' + tr('lucky') + '</em></div>'
+      + '<div class="stat"><b>' + H(q(.5)) + ' h</b><em>' + tr('median') + '</em></div>'
+      + '<div class="stat"><b>' + H(q(.9)) + ' h</b><em>' + tr('unlucky') + '</em></div>'
+      + '</div>';
+    const avgBr = Array.from(sumBr, v => v / ok), maxBr = Math.max(...avgBr);
+    html += '<h2 style="margin-top:18px">' + tr('whereTime') + '</h2><div class="tablewrap"><table><thead><tr><th>' + tr('thRank') + '</th><th>' + tr('thHours') + '</th><th></th></tr></thead><tbody>';
+    let ri = 0;
+    avgBr.forEach((v, b) => {
+      if(v <= 0) return;
+      html += '<tr style="animation-delay:' + (ri++ * 70) + 'ms"><td><span class="dot" style="background:' + RK_COL[b][0] + '"></span>' + brn(b) + '</td><td>' + H(v) + '</td><td style="width:110px"><div class="bar" style="width:' + Math.max(3, v / maxBr * 100) + 'px;background:linear-gradient(180deg,' + RK_COL[b][0] + ',' + RK_COL[b][1] + ')"></div></td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<p class="note">' + tr('rkNote1', c.sims.toLocaleString(LOC()), skName(s)) + (c.boostPct > 0 ? tr('rkBoostNote', c.boostPct, goalName(c.boostUntil)) : '') + tr('rkNote2') + '</p>';
+    $('out').innerHTML = html;
+  }
+
+  function simulate(fn, c){
+    const res = []; let fail = 0;
+    for(let i = 0; i < c.sims; i++){ const n = fn(); if(n < 0) fail++; else res.push(n); }
+    res.sort((a,b) => a-b);
+    if(!res.length) return {mean: Infinity, p10: Infinity, med: Infinity, p90: Infinity, fail: 1};
+    const mean = res.reduce((a,b) => a+b, 0) / res.length;
+    const q = p => res[Math.min(res.length-1, Math.floor(p*res.length))];
+    return {mean, p10: q(.1), med: q(.5), p90: q(.9), fail: fail / c.sims};
+  }
+  const meanOf = r => r.fail > 0.5 ? Infinity : r.mean;
+
+  function parseData(text){
+    const tok = text.split(/\s+/).filter(Boolean);
+    const isNum = x => /^\d+([.,]\d+)?$/.test(x);
+    const out = []; let i = 0;
+    while(i < tok.length){
+      if(/^\d+$/.test(tok[i]) && i+1 < tok.length && !isNum(tok[i+1])) i++;
+      const name = [];
+      while(i < tok.length && !isNum(tok[i])) name.push(tok[i++]);
+      const nums = [];
+      while(i < tok.length && isNum(tok[i])) nums.push(tok[i++]);
+      if(nums.length > 1 && /^\d+$/.test(nums[nums.length-1]) && i < tok.length){ nums.pop(); i--; }
+      if(name.length && nums.length){
+        out.push({name: name.join(' '), wr: parseFloat(nums[0].replace(',', '.')), pick: nums.length > 1 ? parseFloat(nums[1].replace(',', '.')) : 1});
+      }
+    }
+    return out.filter(b => b.wr > 0 && b.wr < 100);
+  }
+
+  function fitCum(N, type, val){
+    const wts = k => { const w = []; let s = 0; for(let i = 0; i < N; i++){ const x = Math.exp(-k * i); w.push(x); s += x; } return w.map(x => x / s); };
+    const f = k => { const w = wts(k); return type === 'mean' ? w.reduce((a,x,i) => a + x * (i+1), 0) : w[0]; };
+    const dec = type === 'mean';
+    let lo = -4, hi = 8;
+    const a = f(lo), b = f(hi);
+    if(val <= Math.min(a,b) || val >= Math.max(a,b)) return null;
+    for(let i = 0; i < 60; i++){
+      const mid = (lo + hi) / 2, fm = f(mid);
+      if(dec ? fm > val : fm < val) lo = mid; else hi = mid;
+    }
+    return wts((lo + hi) / 2);
+  }
+
+  const pause = () => new Promise(r => setTimeout(r, 0));
+
+  function showOne(r, c, extra, note){
+    let html = title(c);
+    if(r.fail > 0.5){
+      html += '<p class="warn">' + tr('warnGen') + '</p>';
+    } else {
+      html += bigHTML(hoursOf(r.mean, c), tr('hrsAvg'));
+      html += '<div class="stats">'
+        + '<div class="stat"><b>' + fmtN(r.mean) + '</b><em>' + tr('matchesAvg') + '</em></div>'
+        + (extra || '')
+        + '<div class="stat"><b>' + fmtH(r.p10, c) + ' h</b><em>' + tr('lucky') + '</em></div>'
+        + '<div class="stat"><b>' + fmtH(r.med, c) + ' h</b><em>' + tr('median') + '</em></div>'
+        + '<div class="stat"><b>' + fmtH(r.p90, c) + ' h</b><em>' + tr('unlucky') + '</em></div>'
+        + '</div>';
+      html += '<p class="note">' + tr('oneNote', c.sims.toLocaleString(LOC()), dc(c.mlen)) + (note || '') + '</p>';
+    }
+    $('out').innerHTML = html;
+  }
+
+  function renderBatch(c, rows, o){
+    const ok = rows.filter(r => isFinite(r.mean));
+    let html = title(c);
+    if(!ok.length){
+      html += '<p class="warn">' + tr('noneReach') + '</p>';
+    } else {
+      const sumAll = rows.reduce((a,r) => a + r.pick, 0);
+      const sumPick = ok.reduce((a,r) => a + r.pick, 0);
+      const simpleS = rows.reduce((a,r) => a + r.wr, 0) / rows.length;
+      const weightedS = rows.reduce((a,r) => a + r.wr * r.pick, 0) / sumAll;
+      const simpleT = ok.reduce((a,r) => a + r.mean, 0) / ok.length;
+      const weightedT = ok.reduce((a,r) => a + r.mean * r.pick, 0) / sumPick;
+      const maxMean = Math.max(...ok.map(r => r.mean));
+      rows.sort((a,b) => a.mean - b.mean);
+      html += bigHTML(hoursOf(weightedT, c), tr('wghtLbl'));
+      html += '<div class="stats">'
+        + '<div class="stat"><b>' + fmtH(simpleT, c) + ' h</b><em>' + tr('simpleTime') + '</em></div>'
+        + '<div class="stat"><b>' + o.fmt(simpleS) + '</b><em>' + tr('simpleStat', o.lbl) + '</em></div>'
+        + '<div class="stat"><b>' + o.fmt(weightedS) + '</b><em>' + tr('wStat', o.lbl) + '</em></div>'
+        + '<div class="stat"><b>' + fmtN(weightedT) + '</b><em>' + tr('matchesW') + '</em></div>'
+        + '</div>';
+      html += '<div class="tablewrap"><table><thead><tr><th>' + tr('thBrawler') + '</th><th>' + o.col + '</th><th>' + tr('thPick') + '</th><th>' + tr('thMatches') + '</th><th>' + tr('thHours') + '</th><th></th></tr></thead><tbody>';
+      rows.forEach((r, i) => {
+        const w = isFinite(r.mean) ? Math.max(2, r.mean / maxMean * 80) : 0;
+        html += '<tr style="animation-delay:' + Math.min(i * 20, 600) + 'ms"><td>' + esc(r.name) + '</td><td>' + o.fmt(r.wr) + '</td><td>' + dc(r.pick.toFixed(1)) + '%</td><td>' + fmtN(r.mean) + '</td><td>' + fmtH(r.mean, c) + '</td><td style="width:90px"><div class="bar" style="width:' + w + 'px"></div></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    html += '<p class="note">' + (o.note || '') + '</p>';
+    $('out').innerHTML = html;
+  }
+
+  async function placeBatch(c){
+    const type = $('statType').value;
+    const list = parseData($('data').value);
+    if(!list.length){
+      $('out').innerHTML = '<h2>' + tr('resultH') + '</h2><p class="warn">' + tr('noBrPlace') + '</p>';
+      return;
+    }
+    const N = c.N, rows = []; let skipped = 0;
+    $('prog').classList.remove('hidden');
+    for(let i = 0; i < list.length; i++){
+      const b = list[i];
+      const w0 = fitCum(N, type, type === 'mean' ? b.wr : b.wr / 100);
+      const w = w0 ? tiltPlaces(w0, curSkill()) : null;
+      if(w){
+        let acc = 0; const cum = w.map(x => (acc += x)); cum[N-1] = 1;
+        const cc = {...c, cum};
+        rows.push({...b, mean: meanOf(simulate(() => oncePlace(cc), cc))});
+      } else skipped++;
+      $('progbar').style.width = ((i+1) / list.length * 100) + '%';
+      if(i % 3 === 0) await pause();
+    }
+    $('prog').classList.add('hidden');
+    if(!rows.length){
+      $('out').innerHTML = '<h2>' + tr('resultH') + '</h2><p class="warn">' + tr('noFit', N) + '</p>';
+      return;
+    }
+    renderBatch(c, rows, {
+      col: type === 'mean' ? tr('colMean') : tr('colP1'),
+      lbl: type === 'mean' ? tr('lblMean') : tr('lblP1'),
+      fmt: v => type === 'mean' ? dc(v.toFixed(2)) : dc(v.toFixed(1)) + '%',
+      note: tr('plBatchNote', skName(curSkill())) + (skipped ? tr('skipped', skipped) : '')
+    });
+  }
+
+  async function wlBatch(c){
+    const list = parseData($('data').value);
+    if(!list.length){
+      $('out').innerHTML = '<h2>' + tr('resultH') + '</h2><p class="warn">' + tr('noBrWl') + '</p>';
+      return;
+    }
+    $('prog').classList.remove('hidden');
+    const rows = [];
+    for(let i = 0; i < list.length; i++){
+      const wr = adjWR(list[i].wr / 100, curSkill());
+      rows.push({...list[i], mean: meanOf(simulate(() => onceWL(wr, c), c))});
+      $('progbar').style.width = ((i+1) / list.length * 100) + '%';
+      if(i % 3 === 0) await pause();
+    }
+    $('prog').classList.add('hidden');
+    const s = curSkill();
+    renderBatch(c, rows, {
+      col: tr('colWr'), lbl: tr('lblWr'),
+      fmt: v => dc(v.toFixed(1)) + '%',
+      note: tr('wlN1', skName(s)) + (s.none ? '.' : s.pro ? tr('wlNpro') : tr('wlNadj')) + tr('wlN2') + (c.split > 1 ? tr('splitRes', c.split) : '')
+    });
+  }
+
+  // ================= ANIMACJE: odliczanie, konfetti, tlo =================
+  function animateBig(){
+    const el = document.querySelector('#out .big[data-v]');
+    if(!el) return false;
+    const v = +el.dataset.v, tn = el.firstChild;
+    if(!tn || tn.nodeType !== 3 || !isFinite(v)) return false;
+    if(RM) return true;
+    const t0 = performance.now(), d = 900;
+    (function f(now){
+      const p = Math.min(1, (now - t0) / d), e = 1 - Math.pow(1 - p, 3);
+      tn.nodeValue = dc((v * e).toFixed(1));
+      if(p < 1) requestAnimationFrame(f); else tn.nodeValue = dc(v.toFixed(1));
+    })(t0);
+    return true;
+  }
+  function confetti(){
+    if(RM) return;
+    const colors = ['#ffd21f','#a070ff','#9cf04a','#ff8a7e','#8be8ff','#ffffff'];
+    const box = document.createElement('div'); box.className = 'confetti';
+    for(let i = 0; i < 44; i++){
+      const p = document.createElement('i');
+      p.style.left = (50 + (Math.random() - .5) * 24) + '%';
+      p.style.background = colors[i % colors.length];
+      p.style.setProperty('--dx', ((Math.random() - .5) * 700) + 'px');
+      p.style.setProperty('--dy', (-120 - Math.random() * 320) + 'px');
+      p.style.setProperty('--rot', (Math.random() * 900 - 450) + 'deg');
+      p.style.animationDelay = (Math.random() * .18) + 's';
+      box.appendChild(p);
+    }
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 2400);
+  }
+  (function buildBg(){
+    const bg = $('bg'), sym = ['\u2605','\u{1F3C6}','\u{1F48E}','\u26A1','\u{1F525}','\u{1F4A5}'];
+    for(let i = 0; i < 22; i++){
+      const s = document.createElement('span'); s.className = 'sym';
+      s.textContent = sym[i % sym.length];
+      s.style.left = (Math.random() * 100) + '%';
+      s.style.fontSize = (18 + Math.random() * 34) + 'px';
+      s.style.animationDuration = (14 + Math.random() * 18) + 's';
+      s.style.animationDelay = '-' + (Math.random() * 30) + 's';
+      bg.appendChild(s);
+    }
+  })();
+
+  // ================= OKIENKO SUBA (co 5. obliczenie) =================
+  let calcCount = 0, lastFocus = null;
+  try { calcCount = +localStorage.getItem('bc_calcs') || 0; } catch(e){}
+  function bumpCount(){
+    calcCount++;
+    try { localStorage.setItem('bc_calcs', String(calcCount)); } catch(e){}
+    return calcCount;
+  }
+  function showModal(){
+    lastFocus = document.activeElement;
+    $('mback').classList.add('show');
+    setTimeout(() => $('mSub').focus(), 60);
+  }
+  function hideModal(){
+    $('mback').classList.remove('show');
+    if(lastFocus && lastFocus.focus) lastFocus.focus();
+  }
+  $('mClose').addEventListener('click', hideModal);
+  $('mSub').addEventListener('click', () => setTimeout(hideModal, 250));
+  $('mback').addEventListener('click', e => { if(e.target === $('mback')) hideModal(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('mback').classList.contains('show')) hideModal(); });
+
+  // ================= PRZELACZNIK JEZYKA =================
+  function setLang(l){
+    lang = l;
+    try { localStorage.setItem('bc_lang', l); } catch(e){}
+    applyStatic();
+    fillBoostSelect();
+    renderSkills();
+    applyMode(false);
+  }
+  document.querySelectorAll('.lg').forEach(b => b.addEventListener('click', () => { if(b.dataset.lang !== lang) setLang(b.dataset.lang); }));
+
+  // ================= START OBLICZEN =================
+  $('run').addEventListener('click', async () => {
+    const btn = $('run'); const m = MODES[modeKey];
+    const place = m.type === 'place';
+    let c;
+    try { c = m.type === 'rank' ? readRank() : place ? readPlace(tab === 'one') : readWL(); }
+    catch(e){ $('out').innerHTML = '<h2>' + tr('resultH') + '</h2><p class="warn">' + e.message + '</p>'; return; }
+    updateGoal();
+    btn.disabled = true; btn.textContent = tr('running');
+    await pause();
+
+    if(m.type === 'rank'){
+      showRank(c);
+    } else if(place && tab === 'all'){
+      await placeBatch(c);
+    } else if(place){
+      const stat = '<div class="stat"><b>' + (c.expStart >= 0 ? '+' : '') + dc(c.expStart.toFixed(1)) + '</b><em>' + tr('placeStart') + '</em></div>';
+      showOne(simulate(() => oncePlace(c), c), c, stat, ' ' + tr('lvlN', skName(curSkill())) + '.' + (c.winPlace > 0 ? tr('streakPl', c.winPlace) : ''));
+    } else if(tab === 'one'){
+      const s = curSkill();
+      const wr = adjWR(+$('wr').value / 100, s);
+      showOne(simulate(() => onceWL(wr, c), c), c, '', ' ' + tr('lvlN', skName(s)) + (s.none ? '' : tr('lvlWr', dc((wr * 100).toFixed(1)))) + '.' + (c.split > 1 ? tr('splitRes', c.split) : ''));
+    } else {
+      await wlBatch(c);
+    }
+    btn.disabled = false; btn.textContent = tr('run');
+
+    const hasResult = animateBig();
+    if(hasResult) confetti();
+    const n = bumpCount();
+    if(n % 2 === 0) setTimeout(showModal, RM ? 300 : 1500);
+  });
+
+  applyStatic();
+  fillBoostSelect();
+  renderSkills();
+  applyMode(true);
+})();
+</script>
+</body>
+</html>
